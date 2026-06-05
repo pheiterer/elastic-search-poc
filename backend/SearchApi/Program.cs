@@ -39,7 +39,9 @@ app.UseCors();
 app.MapGet("/api/events", async (ElasticsearchClient client) =>
 {
     var response = await client.SearchAsync<Event>(s => s
+        .Index("events")
         .Query(q => q.MatchAll())
+        .Size(1000)
     );
 
     if (!response.IsValidResponse) return Results.Problem(response.DebugInformation);
@@ -53,17 +55,25 @@ app.MapGet("/api/events/search", async (string q, ElasticsearchClient client) =>
 {
     if (string.IsNullOrWhiteSpace(q))
     {
-        var allResponse = await client.SearchAsync<Event>(s => s.Query(mq => mq.MatchAll()));
+        var allResponse = await client.SearchAsync<Event>(s => s
+            .Index("events")
+            .Query(mq => mq.MatchAll())
+            .Size(1000)
+        );
         return Results.Ok(allResponse.Documents);
     }
 
     var response = await client.SearchAsync<Event>(s => s
+        .Index("events")
         .Query(query => query
-            .Match(m => m
-                .Field(f => f.Name)
-                .Query(q)
+            .Bool(b => b
+                .Should(
+                    sh => sh.Match(m => m.Field(f => f.Name).Query(q)),
+                    sh => sh.Prefix(p => p.Field(f => f.Name).Value(q.ToLower()).Boost(5.0f))
+                )
             )
         )
+        .Size(1000)
     );
 
     if (!response.IsValidResponse) return Results.Problem(response.DebugInformation);
