@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vscode/
+
+# Docker
+.env
+
+# OS
+.DS_Store
+Thumbs.db
